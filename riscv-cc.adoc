@@ -327,25 +327,28 @@ provided they hold values no more than ABI_FLEN bits wide.
 
 === Hardware Vector Calling Convention
 
-The first named scalar argument of vector mask type use v0 to pass. Other named
-scalar arguments of the same type pass like the named scalar arguments of
-vector data type. See the following description about named scalar arguments
-of vector data type.
+This section applies only to named arguments. Variadic arguments are passed according to the integer calling convention.
 
-Named scalar arguments of vector data type has property LMUL. If LMUL is less
-than 1, treat it as 1. If it is possible to find unused registers segment
-starting from v1 and the first register in segment is LMUL-aligned, use these
-registers to pass the argument. Otherwise, pass through the function stack.
+The hardware vector calling convention adds 1 argument register of vector data type and 31 argument registers of vector data type which are v0 and v1-v31, respectively. v0 is used for the first vector mask type argument and the vector mask type return value, the rest of the mask type arguments are treated as vector data type arguments. v1-v31 are also used for the vector data type return value.
 
-Aggregates cannot pass with vector registers.
+Vector data type arguments have property LMUL, the current LMUL can be 1/8, 1/4, 1/2, 1, 2, 4, 8. For arguments with LMUL less than 1, their LMUL is treated as 1. The LMUL of the vector mask type argument is treated as 1. If it is possible to find unused continuous vector register set starting from v1 and the first register in segment is LMUL-aligned, use these registers to pass the argument. Otherwise, pass through the function stack.
 
-Variadic vector arguments are passed by reference.
+A struct containing just one vector type value is passed as though it were a standalone vector type value.
 
-Vector mask value is rturned in the same manner as a first named argument of the
-same type would be passed.
+A struct containing two vector type values is passed in vector registers, if there are suitable unused continuous vector register sets for them. Otherwise, it is passed according to the integer calling convention.
 
-Vector data value is returnd in the same manner as a first named argument of the
-same type would be passed.
+A struct containing one vector type value and one integer (or bitfield), in either order, is passed in vector registers and an integer register, provided the integer is no more than XLEN bits wide, and at least one unused continuous vector register set and at least one integer argument register are available.
+
+A struct is not passed in this manner, then it is passed according to the integer calling convention.
+
+NOTE: See the Hardware Floating-point Calling Convention section for the definition of struct.
+
+Unions are never flattened and are always passed according to the integer calling convention.
+
+Struct or vector scalars passed on the stack are aligned to the type alignment.
+
+Values are returned in the same manner as a first named argument of the same
+type would be passed.
 
 NOTE: vector mask type and data type defined https://github.com/riscv-non-isa/rvv-intrinsic-doc/blob/master/rvv-intrinsic-rfc.md#type-system[here]. Data type include tuple type.
 
